@@ -76,26 +76,42 @@ public class BlackJackMain extends Application {
         root.setTop(topBox);
         root.setCenter(middleAndCardsBox);
         root.setBottom(bottomBox);
+ 
+        // Add an event handler to the hit button
+        hitButton.setOnAction(event -> {
+            controller.hit();
+            clearMessageLabelIfNeeded();
+        });
 
-        // Set event handlers
+        // Add an event handler to the stand button
+        standButton.setOnAction(event -> {
+            controller.stand();
+            clearMessageLabelIfNeeded();
+        });
+
+        // Add an event handler to the double button
+        doubleButton.setOnAction(event -> {
+            controller.doubleDown();
+            clearMessageLabelIfNeeded();
+        });
+
+        // Add an event handler to the bet button
+        betButton.setOnAction(event -> {
+            String betAmountText = betTextField.getText().replaceAll("\\$", ""); 
+            int betAmount = Integer.parseInt(betAmountText);
+            controller.placeBet(betAmount);
+            clearMessageLabelIfNeeded();
+        });
+        splitButton.setOnAction(event -> controller.split());
+     // Add an event handler to the play game button
         playGameButton.setOnAction(event -> {
             controller.playGame();
             betButton.setDisable(true); // Disable bet button after clicking play game
-        });
-        hitButton.setOnAction(event -> controller.hit());
-        standButton.setOnAction(event -> controller.stand());
-        splitButton.setOnAction(event -> controller.split());
-        doubleButton.setOnAction(event -> controller.doubleDown());
-        betButton.setOnAction(event -> {
-            String betAmountText = betTextField.getText().replaceAll("\\$", ""); // Remove dollar sign
-            int betAmount = Integer.parseInt(betAmountText);
-            controller.placeBet(betAmount);
+            clearMessageLabelIfNeeded();
         });
 
-        // Create the scene
+        // Create the GUI scene
         Scene scene = new Scene(root, 650, 450);
-
-        // Set the scene and show the stage
         primaryStage.setScene(scene);
         primaryStage.setTitle("BlackJack Game");
         primaryStage.show();
@@ -109,10 +125,10 @@ public class BlackJackMain extends Application {
         playGameButton.setDisable(true);
         betButton.setDisable(true);
         for (Node card : dealerCardsBox.getChildren()) {
-            card.setOpacity(0.3); // Reduce opacity of dealer cards
+            card.setOpacity(0.3); // This reduces opacity of cards when the player runs out of money to hint at the game being over
         }
         for (Node card : playerCardsBox.getChildren()) {
-            card.setOpacity(0.3); // Reduce opacity of player cards
+            card.setOpacity(0.3); 
         }
     }
 
@@ -124,10 +140,10 @@ public class BlackJackMain extends Application {
         playGameButton.setDisable(false);
         betButton.setDisable(false);
         for (Node card : dealerCardsBox.getChildren()) {
-            card.setOpacity(1.0); // Restore opacity of dealer cards
+            card.setOpacity(1.0); // Restore opacity 
         }
         for (Node card : playerCardsBox.getChildren()) {
-            card.setOpacity(1.0); // Restore opacity of player cards
+            card.setOpacity(1.0); 
         }
     }
 
@@ -141,22 +157,29 @@ public class BlackJackMain extends Application {
     }
 
     public void addDealerCard(Image image) {
-        if (dealerCardsBox.getChildren().size() < 5) { // Limit to 5 cards
+        if (dealerCardsBox.getChildren().size() < 5) { // Limit to 5 cards in window, might make it 6 bc there was a case i hit until 6 cards
             ImageView imageView = new ImageView(image);
             imageView.setFitWidth(100);
             imageView.setPreserveRatio(true);
-            dealerCardsBox.getChildren().add(imageView); // Add the new card to the VBox
-            System.out.println("Dealer's Card Drawn: " + image.getUrl()); // Print the card drawn
+            dealerCardsBox.getChildren().add(imageView); 
+            System.out.println("Dealer's Card Drawn: " + image.getUrl()); 
         }
     }
 
     public void addPlayerCard(Image image) {
-        if (playerCardsBox.getChildren().size() < 5) { // Limit to 5 cards
+        if (playerCardsBox.getChildren().size() < 5) { 
             ImageView imageView = new ImageView(image);
             imageView.setFitWidth(100);
             imageView.setPreserveRatio(true);
             playerCardsBox.getChildren().add(imageView);
             System.out.println("Player's Card Drawn: " + image.getUrl());
+        }
+    }
+    
+    private void clearMessageLabelIfNeeded() {
+        if (messageLabel.isVisible()) {
+            messageLabel.setText("");
+            messageLabel.setVisible(false);
         }
     }
 
@@ -179,7 +202,7 @@ public class BlackJackMain extends Application {
     public Button getBetButton() {
         return betButton;
     }
-
+ 
     public Button getDoubleButton() {
         return doubleButton;
     }

@@ -1,16 +1,24 @@
 package model;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Player {
-    private final Hand hand;
+    private final List<Hand> hands;
     private int balance;
 
     public Player() {
-        this.hand = new Hand();
-        this.balance = 100; // Starting balance
+        this.hands = new ArrayList<>();
+        this.balance = 1000; // Starting balance
+        this.hands.add(new Hand()); // Initialize at least one hand for the player
     }
 
     public Hand getHand() {
-        return hand;
+        return hands.get(0); // Return the first hand
+    }
+
+    public List<Hand> getHands() {
+        return hands;
     }
 
     public int getBalance() {
@@ -24,10 +32,16 @@ public class Player {
     public void removeFromBalance(int amount) {
         balance -= amount;
     }
-    
-    public void clearHand() {
-        hand.clear();
+
+    public void clearHands() {
+        hands.clear();
     }
 
-    // Implement additional methods for player actions like hitting, standing, etc.
+    public void addHand(Hand hand) {
+        hands.add(hand);
+    }
+
+    public void removeHand(Hand hand) {
+        hands.remove(hand);
+    }
 }

@@ -13,8 +13,8 @@ public class BlackJackController {
     private final BlackJackMain view;
     private final Player player = new Player();
     private final Player dealer = new Player();
-    private final Hand playerHand = player.getHand();
-    private final Hand dealerHand = dealer.getHand();
+    private Hand playerHand = player.getHand();
+    private Hand dealerHand = dealer.getHand();
     private final Button hitButton;
     private final Button standButton;
     private final Button splitButton;
@@ -47,8 +47,12 @@ public class BlackJackController {
         resetGame();
         dealInitialCards();
         updateScoreLabels();
-        enableGameButtons(); // Enable game buttons after starting a new game
-        view.getBetButton().setDisable(false); // Enable bet button at the start of the game
+        enableGameButtons();
+        view.getBetButton().setDisable(false);
+        
+        // Initialize playerHand and dealerHand after dealing initial cards
+        playerHand = player.getHand();
+        dealerHand = dealer.getHand();
     }
 
     private void enableGameButtons() {
@@ -87,25 +91,32 @@ public class BlackJackController {
     }
 
     private void dealerPlay() {
-        // Dealer continues to draw cards until their score is 18 or higher
-        while (dealerHand.calculateScore() < 18) {
+        int playerScore = playerHand.calculateScore();
+        int dealerScore = dealerHand.calculateScore();
+        
+        // Dealer continues to draw cards until their score is less than or equal to the player's score
+        while (dealerScore <= playerScore && dealerScore < 21) {
             Card card = deck.dealCard();
             dealerHand.addCard(card);
             view.addDealerCard(new Image(card.getImagePath()));
+            dealerScore = dealerHand.calculateScore();
         }
+        
         updateScoreLabels();
         checkWinner(); // Check for winner after dealer's turn
     }
+
     
     private void dealInitialCards() {
         for (int i = 0; i < 2; i++) {
-            playerHand.addCard(deck.dealCard());
+            Card playerCard = deck.dealCard();
+            playerHand.addCard(playerCard);
+            view.addPlayerCard(new Image(playerCard.getImagePath()));
+            
             Card dealerCard = deck.dealCard();
             dealerHand.addCard(dealerCard);
             view.addDealerCard(new Image(dealerCard.getImagePath()));
         }
-        view.addPlayerCard(new Image(playerHand.getCards().get(0).getImagePath()));
-        view.addPlayerCard(new Image(playerHand.getCards().get(1).getImagePath()));
     }
 
 
@@ -139,6 +150,12 @@ public class BlackJackController {
             // Player busts, game over
             view.updatePlayerScore("BUST: You Lose!");
             disableGameButtons();
+        } else if (playerScore == 21 && playerHand.getCards().size() == 2) {
+            // Player gets blackjack, player wins
+            view.updatePlayerScore("Blackjack! You Win!");
+            accountBalance += currentBet * 2.5; // Add blackjack payout to the account balance
+            view.getAccountBalanceLabel().setText("Account Balance: $" + accountBalance); // Update account balance label
+            disableGameButtons();
         } else if (playerStayed || isPlayerBusted()) {
             // Player has stayed or busted, now compare scores
             if (dealerScore > 21 || playerScore > dealerScore) {
@@ -158,10 +175,19 @@ public class BlackJackController {
             }
             disableGameButtons();
         }
+
+        // Check if the dealer busts
+        if (dealerScore > 21) {
+            // Player wins if dealer busts
+            view.updateDealerScore("Dealer BUSTS: You Win!");
+            accountBalance += currentBet * 2; // Add double the bet amount to the account balance
+            view.getAccountBalanceLabel().setText("Account Balance: $" + accountBalance); // Update account balance label
+            disableGameButtons();
+        }
+
         // Enable the bet button after someone wins, loses, or it's a draw
         view.getBetButton().setDisable(false);
     }
-
 
 
 
@@ -220,7 +246,46 @@ public class BlackJackController {
     }
 
     public void split() {
-        // Implement logic to handle split action
+        List<Card> playerCards = playerHand.getCards();
+
+        // Check if the player has two cards and they are of the same rank
+        if (playerCards.size() == 2 && playerCards.get(0).getRank() == playerCards.get(1).getRank()) {
+            // Check if the player has enough funds to place an additional bet for the new hand
+            int additionalBet = currentBet;
+            if (additionalBet <= accountBalance) {
+                // Deduct the additional bet amount from the player's account balance
+                accountBalance -= additionalBet;
+                view.getAccountBalanceLabel().setText("Account Balance: $" + accountBalance);
+                // Create a new hand for the player and add one of the split cards to it
+                Hand newHand = new Hand();
+                newHand.addCard(playerCards.remove(1)); // Remove and add one of the split cards to the new hand
+                playerHand.addCard(deck.dealCard()); // Deal a new card for the original hand
+                // Add the new hand to the player's hand list
+                player.addHand(newHand);
+                // Draw cards for both hands in the view
+                view.clearPlayerCards();
+                for (Card card : playerHand.getCards()) {
+                    view.addPlayerCard(new Image(card.getImagePath()));
+                }
+                for (Card card : newHand.getCards()) {
+                    view.addPlayerCard(new Image(card.getImagePath()));
+                }
+                // Update the player's score labels
+                updateScoreLabels();
+                // Check if either hand has blackjack
+                if (playerHand.isBlackjack() || newHand.isBlackjack()) {
+                    checkWinner();
+                }
+            } else {
+                // Inform the player of insufficient funds
+                view.getMessageLabel().setText("Insufficient funds for split.");
+                view.getMessageLabel().setVisible(true);
+            }
+        } else {
+            // Inform the player that they cannot split
+            view.getMessageLabel().setText("You cannot split at this time.");
+            view.getMessageLabel().setVisible(true);
+        }
     }
     
     public int getAccountBalance() {

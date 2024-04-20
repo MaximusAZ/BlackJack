@@ -26,7 +26,6 @@ public class Hand {
             } else if (rank == Rank.JACK || rank == Rank.QUEEN || rank == Rank.KING) {
                 score += 10; // Jack, Queen, and King all have a value of 10
             } else {
-                // For numeric ranks, directly add the value to the score
                 score += rank.getValue();
             }
         }
@@ -38,6 +37,10 @@ public class Hand {
         }
 
         return score;
+    }
+    
+    public boolean isBlackjack() {
+        return cards.size() == 2 && calculateScore() == 21;
     }
     
     public List<Card> getCards() {
